@@ -29,6 +29,31 @@ filesToCopy.forEach(file => {
     }
 });
 
+// Copy image directory to public/image
+const imageSrcDir = path.join(__dirname, 'image');
+const imageDestDir = path.join(publicDir, 'image');
+
+if (fs.existsSync(imageSrcDir)) {
+    if (!fs.existsSync(imageDestDir)) {
+        fs.mkdirSync(imageDestDir, { recursive: true });
+    }
+    
+    const imageFiles = fs.readdirSync(imageSrcDir);
+    imageFiles.forEach(file => {
+        const srcPath = path.join(imageSrcDir, file);
+        const destPath = path.join(imageDestDir, file);
+        
+        // Check if it's a file (not a directory)
+        if (fs.statSync(srcPath).isFile()) {
+            fs.copyFileSync(srcPath, destPath);
+            console.log(`Copied image/${file} to public/image/`);
+        }
+    });
+    console.log(`Copied ${imageFiles.length} image files to public/image/`);
+} else {
+    console.log('Warning: image directory not found');
+}
+
 // Copy api directory (keep it at root level for Vercel functions)
 // Vercel functions should be in root/api, not public/api
 const apiSrcDir = path.join(__dirname, 'api');
