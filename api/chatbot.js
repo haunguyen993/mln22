@@ -63,25 +63,12 @@ async function chatWithOpenAI(req, res, { message, chatHistory, context }) {
             apiKey: process.env.OPENAI_API_KEY,
         });
 
-        // Build system message with context
-        let systemMessage = `Bạn là một AI trợ lý thông minh và hữu ích với kiến thức rộng về nhiều lĩnh vực:
-- Tôn giáo trên thế giới (Phật giáo, Công giáo, Hồi giáo, Ấn Độ giáo, Do Thái giáo, Đạo Sikh, Đạo giáo, Nho giáo, Chính Thống giáo, Tin Lành)
-- Chính sách tôn giáo của Việt Nam
-- Lịch sử, văn hóa, khoa học, công nghệ, chính trị, kinh tế, thể thao, giải trí
-- Và nhiều chủ đề khác
+        // Build system message - Use ChatGPT's natural knowledge
+        let systemMessage = `Bạn là một AI trợ lý thông minh và hữu ích. Sử dụng kiến thức tự nhiên của bạn để trả lời mọi câu hỏi một cách chính xác và hữu ích.
 
-⚠️ QUAN TRỌNG - CẬP NHẬT THÔNG TIN MỚI NHẤT:
-- Luôn sử dụng thông tin mới nhất và cập nhật nhất có thể
-- Khi trả lời về sự kiện hiện tại hoặc tương lai, hãy sử dụng thông tin mới nhất tính đến thời điểm hiện tại
-- Nếu có thông tin mới hơn, hãy ưu tiên thông tin đó
-- Đối với câu hỏi về năm cụ thể:
-  * Nếu năm trong câu hỏi <= năm hiện tại: Hãy trả lời dựa trên thông tin thực tế đã xảy ra hoặc đang diễn ra
-  * Nếu năm trong câu hỏi > năm hiện tại: Hãy phân tích dựa trên thông tin hiện có, các ứng viên/kế hoạch đã công bố, và làm rõ đây là dự đoán/phân tích dựa trên thông tin hiện tại
-- Luôn cập nhật kiến thức về các sự kiện đang diễn ra, tin tức mới nhất, và xu hướng hiện tại
-- Nếu không chắc chắn về thông tin mới nhất, hãy nói rõ và đề xuất người dùng kiểm tra nguồn tin cập nhật
-- KHÔNG từ chối trả lời câu hỏi về tương lai, thay vào đó hãy phân tích và dự đoán dựa trên thông tin hiện có
+Bạn có kiến thức rộng về nhiều lĩnh vực và có thể trả lời về bất kỳ chủ đề nào. Hãy sử dụng kiến thức của bạn một cách tự nhiên và linh hoạt.
 
-Bạn trả lời bằng tiếng Việt, rõ ràng, chính xác và hữu ích. Luôn ưu tiên thông tin mới nhất và cập nhật nhất. Nếu không biết câu trả lời, hãy nói thật và đề xuất nguồn thông tin khác.`;
+Trả lời bằng tiếng Việt, rõ ràng, chính xác và hữu ích.`;
 
         if (context && context.religionKnowledge) {
             systemMessage += `\n\nBạn có quyền truy cập vào knowledge base về tôn giáo để cung cấp thông tin chính xác.`;
@@ -108,32 +95,10 @@ Bạn trả lời bằng tiếng Việt, rõ ràng, chính xác và hữu ích. 
             });
         }
 
-        // Add current message with date context for latest information
-        const now = new Date();
-        const currentDate = now.toLocaleDateString('vi-VN', { 
-            year: 'numeric', 
-            month: 'long', 
-            day: 'numeric' 
-        });
-        const currentYear = now.getFullYear();
-        
-        // Detect year in message for better context
-        const yearMatch = message.match(/(\d{4})/);
-        let yearContext = '';
-        if (yearMatch) {
-            const questionYear = parseInt(yearMatch[1]);
-            if (questionYear <= currentYear) {
-                yearContext = ` (Năm ${questionYear} là năm hiện tại hoặc đã qua, hãy trả lời dựa trên thông tin thực tế)`;
-            } else {
-                yearContext = ` (Năm ${questionYear} là tương lai, hãy phân tích dựa trên thông tin hiện có và các dự đoán)`;
-            }
-        }
-        
-        const messageWithContext = `[Ngày hiện tại: ${currentDate}, Năm hiện tại: ${currentYear}${yearContext}] ${message}`;
-        
+        // Add current message - Let ChatGPT use its natural knowledge
         messages.push({
             role: 'user',
-            content: messageWithContext
+            content: message
         });
 
         const completion = await openai.chat.completions.create({
@@ -164,25 +129,12 @@ async function chatWithAnthropic(req, res, { message, chatHistory, context }) {
             apiKey: process.env.ANTHROPIC_API_KEY,
         });
 
-        // Build system message
-        let systemMessage = `Bạn là một AI trợ lý thông minh và hữu ích với kiến thức rộng về nhiều lĩnh vực:
-- Tôn giáo trên thế giới (Phật giáo, Công giáo, Hồi giáo, Ấn Độ giáo, Do Thái giáo, Đạo Sikh, Đạo giáo, Nho giáo, Chính Thống giáo, Tin Lành)
-- Chính sách tôn giáo của Việt Nam
-- Lịch sử, văn hóa, khoa học, công nghệ, chính trị, kinh tế, thể thao, giải trí
-- Và nhiều chủ đề khác
+        // Build system message - Use ChatGPT's natural knowledge
+        let systemMessage = `Bạn là một AI trợ lý thông minh và hữu ích. Sử dụng kiến thức tự nhiên của bạn để trả lời mọi câu hỏi một cách chính xác và hữu ích.
 
-⚠️ QUAN TRỌNG - CẬP NHẬT THÔNG TIN MỚI NHẤT:
-- Luôn sử dụng thông tin mới nhất và cập nhật nhất có thể
-- Khi trả lời về sự kiện hiện tại hoặc tương lai, hãy sử dụng thông tin mới nhất tính đến thời điểm hiện tại
-- Nếu có thông tin mới hơn, hãy ưu tiên thông tin đó
-- Đối với câu hỏi về năm cụ thể:
-  * Nếu năm trong câu hỏi <= năm hiện tại: Hãy trả lời dựa trên thông tin thực tế đã xảy ra hoặc đang diễn ra
-  * Nếu năm trong câu hỏi > năm hiện tại: Hãy phân tích dựa trên thông tin hiện có, các ứng viên/kế hoạch đã công bố, và làm rõ đây là dự đoán/phân tích dựa trên thông tin hiện tại
-- Luôn cập nhật kiến thức về các sự kiện đang diễn ra, tin tức mới nhất, và xu hướng hiện tại
-- Nếu không chắc chắn về thông tin mới nhất, hãy nói rõ và đề xuất người dùng kiểm tra nguồn tin cập nhật
-- KHÔNG từ chối trả lời câu hỏi về tương lai, thay vào đó hãy phân tích và dự đoán dựa trên thông tin hiện có
+Bạn có kiến thức rộng về nhiều lĩnh vực và có thể trả lời về bất kỳ chủ đề nào. Hãy sử dụng kiến thức của bạn một cách tự nhiên và linh hoạt.
 
-Bạn trả lời bằng tiếng Việt, rõ ràng, chính xác và hữu ích. Luôn ưu tiên thông tin mới nhất và cập nhật nhất. Nếu không biết câu trả lời, hãy nói thật và đề xuất nguồn thông tin khác.`;
+Trả lời bằng tiếng Việt, rõ ràng, chính xác và hữu ích.`;
 
         // Build messages array
         const messages = [];
@@ -200,32 +152,10 @@ Bạn trả lời bằng tiếng Việt, rõ ràng, chính xác và hữu ích. 
             });
         }
 
-        // Add current message with date context for latest information
-        const now = new Date();
-        const currentDate = now.toLocaleDateString('vi-VN', { 
-            year: 'numeric', 
-            month: 'long', 
-            day: 'numeric' 
-        });
-        const currentYear = now.getFullYear();
-        
-        // Detect year in message for better context
-        const yearMatch = message.match(/(\d{4})/);
-        let yearContext = '';
-        if (yearMatch) {
-            const questionYear = parseInt(yearMatch[1]);
-            if (questionYear <= currentYear) {
-                yearContext = ` (Năm ${questionYear} là năm hiện tại hoặc đã qua, hãy trả lời dựa trên thông tin thực tế)`;
-            } else {
-                yearContext = ` (Năm ${questionYear} là tương lai, hãy phân tích dựa trên thông tin hiện có và các dự đoán)`;
-            }
-        }
-        
-        const messageWithContext = `[Ngày hiện tại: ${currentDate}, Năm hiện tại: ${currentYear}${yearContext}] ${message}`;
-        
+        // Add current message - Let ChatGPT use its natural knowledge
         messages.push({
             role: 'user',
-            content: messageWithContext
+            content: message
         });
 
         const response = await anthropic.messages.create({
