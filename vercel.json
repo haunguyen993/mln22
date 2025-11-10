@@ -1,14 +1,11 @@
 {
+  "version": 2,
+  "buildCommand": "npm run build",
+  "outputDirectory": "public",
+  "framework": null,
   "functions": {
-    "api/generate-article.js": {
+    "api/**/*.js": {
       "maxDuration": 30
     }
-  },
-  "rewrites": [
-    {
-      "source": "/api/generate-article",
-      "destination": "/api/generate-article.js"
-    }
-  ]
+  }
 }
-
