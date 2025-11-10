@@ -28,6 +28,20 @@ Hãy trả lời câu hỏi một cách chính xác, dễ hiểu, và thân thi�
 let chatbotOpen = false;
 let chatHistory = [];
 
+// Update chat history format for API
+function updateChatHistory(sender, text) {
+    chatHistory.push({ 
+        sender: sender, 
+        text: text,
+        role: sender === 'user' ? 'user' : 'assistant'
+    });
+    
+    // Keep only last 20 messages to avoid too much context
+    if (chatHistory.length > 20) {
+        chatHistory = chatHistory.slice(-20);
+    }
+}
+
 // DOM Elements
 let chatbot, toggleButton, closeButton, messagesContainer, inputField, sendButton;
 
@@ -106,7 +120,7 @@ function addMessage(text, sender) {
     messagesContainer.scrollTop = messagesContainer.scrollHeight;
     
     // Add to history
-    chatHistory.push({ sender, text });
+    updateChatHistory(sender, text);
 }
 
 // Format Message (basic markdown support)
@@ -156,8 +170,64 @@ function removeTypingIndicator(id) {
     }
 }
 
+// Chat with AI API
+async function chatWithAI(message) {
+    try {
+        // Prepare chat history for context
+        const historyForAPI = chatHistory.slice(-10).map(msg => ({
+            role: msg.sender === 'user' ? 'user' : 'assistant',
+            content: msg.text
+        }));
+
+        // Get context from knowledge base if available
+        const knowledgeResults = searchReligionKnowledge(message);
+        const context = {
+            religionKnowledge: knowledgeResults.length > 0
+        };
+
+        const response = await fetch('/api/chatbot', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                message: message,
+                chatHistory: historyForAPI,
+                context: context
+            }),
+        });
+
+        if (!response.ok) {
+            throw new Error('API request failed');
+        }
+
+        const data = await response.json();
+        
+        // If API says to use fallback, return null
+        if (data.useFallback) {
+            return null;
+        }
+
+        return data;
+    } catch (error) {
+        console.log('AI API not available, using fallback:', error);
+        return null;
+    }
+}
+
 // Process Message with AI
 async function processMessage(message) {
+    // Try to use AI API first
+    try {
+        const aiResponse = await chatWithAI(message);
+        if (aiResponse && aiResponse.success) {
+            return aiResponse.response;
+        }
+    } catch (error) {
+        console.log('AI API not available, using fallback:', error);
+    }
+
+    // Fallback to rule-based with knowledge base
     // First, try to search in religion knowledge base
     const knowledgeResults = searchReligionKnowledge(message);
     
