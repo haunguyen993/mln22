@@ -1,0 +1,14 @@
+{
+  "functions": {
+    "api/generate-article.js": {
+      "maxDuration": 30
+    }
+  },
+  "rewrites": [
+    {
+      "source": "/api/generate-article",
+      "destination": "/api/generate-article.js"
+    }
+  ]
+}
+

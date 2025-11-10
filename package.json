@@ -1,0 +1,17 @@
+{
+  "name": "ton-giao-website",
+  "version": "1.0.0",
+  "description": "Website về tôn giáo với AI features",
+  "scripts": {
+    "dev": "vercel dev",
+    "build": "echo 'No build step required'",
+    "start": "vercel dev"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.9.1",
+    "openai": "^4.104.0"
+  },
+  "devDependencies": {
+    "vercel": "^32.0.0"
+  }
+}
