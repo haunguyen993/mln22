@@ -64,13 +64,21 @@ async function chatWithOpenAI(req, res, { message, chatHistory, context }) {
         });
 
         // Build system message with context
-        let systemMessage = `Bạn là một AI trợ lý thông minh và hữu ích. Bạn có kiến thức rộng về nhiều lĩnh vực:
+        let systemMessage = `Bạn là một AI trợ lý thông minh và hữu ích với kiến thức rộng về nhiều lĩnh vực:
 - Tôn giáo trên thế giới (Phật giáo, Công giáo, Hồi giáo, Ấn Độ giáo, Do Thái giáo, Đạo Sikh, Đạo giáo, Nho giáo, Chính Thống giáo, Tin Lành)
 - Chính sách tôn giáo của Việt Nam
-- Lịch sử, văn hóa, khoa học, công nghệ
+- Lịch sử, văn hóa, khoa học, công nghệ, chính trị, kinh tế, thể thao, giải trí
 - Và nhiều chủ đề khác
 
-Bạn trả lời bằng tiếng Việt, rõ ràng, chính xác và hữu ích. Nếu không biết câu trả lời, hãy nói thật và đề xuất nguồn thông tin khác.`;
+⚠️ QUAN TRỌNG - CẬP NHẬT THÔNG TIN MỚI NHẤT:
+- Luôn sử dụng thông tin mới nhất và cập nhật nhất có thể
+- Khi trả lời về sự kiện hiện tại hoặc tương lai, hãy sử dụng thông tin mới nhất tính đến thời điểm hiện tại
+- Nếu có thông tin mới hơn, hãy ưu tiên thông tin đó
+- Đối với sự kiện chưa xảy ra (tương lai), hãy phân tích dựa trên thông tin hiện có và làm rõ đây là dự đoán/phân tích
+- Luôn cập nhật kiến thức về các sự kiện đang diễn ra, tin tức mới nhất, và xu hướng hiện tại
+- Nếu không chắc chắn về thông tin mới nhất, hãy nói rõ và đề xuất người dùng kiểm tra nguồn tin cập nhật
+
+Bạn trả lời bằng tiếng Việt, rõ ràng, chính xác và hữu ích. Luôn ưu tiên thông tin mới nhất và cập nhật nhất. Nếu không biết câu trả lời, hãy nói thật và đề xuất nguồn thông tin khác.`;
 
         if (context && context.religionKnowledge) {
             systemMessage += `\n\nBạn có quyền truy cập vào knowledge base về tôn giáo để cung cấp thông tin chính xác.`;
@@ -97,10 +105,18 @@ Bạn trả lời bằng tiếng Việt, rõ ràng, chính xác và hữu ích. 
             });
         }
 
-        // Add current message
+        // Add current message with date context for latest information
+        const currentDate = new Date().toLocaleDateString('vi-VN', { 
+            year: 'numeric', 
+            month: 'long', 
+            day: 'numeric' 
+        });
+        
+        const messageWithContext = `[Ngày hiện tại: ${currentDate}] ${message}`;
+        
         messages.push({
             role: 'user',
-            content: message
+            content: messageWithContext
         });
 
         const completion = await openai.chat.completions.create({
@@ -132,13 +148,21 @@ async function chatWithAnthropic(req, res, { message, chatHistory, context }) {
         });
 
         // Build system message
-        let systemMessage = `Bạn là một AI trợ lý thông minh và hữu ích. Bạn có kiến thức rộng về nhiều lĩnh vực:
+        let systemMessage = `Bạn là một AI trợ lý thông minh và hữu ích với kiến thức rộng về nhiều lĩnh vực:
 - Tôn giáo trên thế giới (Phật giáo, Công giáo, Hồi giáo, Ấn Độ giáo, Do Thái giáo, Đạo Sikh, Đạo giáo, Nho giáo, Chính Thống giáo, Tin Lành)
 - Chính sách tôn giáo của Việt Nam
-- Lịch sử, văn hóa, khoa học, công nghệ
+- Lịch sử, văn hóa, khoa học, công nghệ, chính trị, kinh tế, thể thao, giải trí
 - Và nhiều chủ đề khác
 
-Bạn trả lời bằng tiếng Việt, rõ ràng, chính xác và hữu ích. Nếu không biết câu trả lời, hãy nói thật và đề xuất nguồn thông tin khác.`;
+⚠️ QUAN TRỌNG - CẬP NHẬT THÔNG TIN MỚI NHẤT:
+- Luôn sử dụng thông tin mới nhất và cập nhật nhất có thể
+- Khi trả lời về sự kiện hiện tại hoặc tương lai, hãy sử dụng thông tin mới nhất tính đến thời điểm hiện tại
+- Nếu có thông tin mới hơn, hãy ưu tiên thông tin đó
+- Đối với sự kiện chưa xảy ra (tương lai), hãy phân tích dựa trên thông tin hiện có và làm rõ đây là dự đoán/phân tích
+- Luôn cập nhật kiến thức về các sự kiện đang diễn ra, tin tức mới nhất, và xu hướng hiện tại
+- Nếu không chắc chắn về thông tin mới nhất, hãy nói rõ và đề xuất người dùng kiểm tra nguồn tin cập nhật
+
+Bạn trả lời bằng tiếng Việt, rõ ràng, chính xác và hữu ích. Luôn ưu tiên thông tin mới nhất và cập nhật nhất. Nếu không biết câu trả lời, hãy nói thật và đề xuất nguồn thông tin khác.`;
 
         // Build messages array
         const messages = [];
@@ -156,10 +180,18 @@ Bạn trả lời bằng tiếng Việt, rõ ràng, chính xác và hữu ích. 
             });
         }
 
-        // Add current message
+        // Add current message with date context for latest information
+        const currentDate = new Date().toLocaleDateString('vi-VN', { 
+            year: 'numeric', 
+            month: 'long', 
+            day: 'numeric' 
+        });
+        
+        const messageWithContext = `[Ngày hiện tại: ${currentDate}] ${message}`;
+        
         messages.push({
             role: 'user',
-            content: message
+            content: messageWithContext
         });
 
         const response = await anthropic.messages.create({
