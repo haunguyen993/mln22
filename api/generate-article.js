@@ -65,7 +65,9 @@ async function generateWithOpenAI(req, res, { topic, religion, customTopic, styl
             messages: [
                 {
                     role: 'system',
-                    content: 'Bạn là một chuyên gia viết bài về tôn giáo. Viết bài viết chuyên sâu, chính xác và hấp dẫn bằng tiếng Việt. Sử dụng HTML để format (h2, h3, p, ul, li, strong).'
+                    content: 'Bạn là một chuyên gia viết bài. Viết bài viết chuyên sâu, chính xác và hấp dẫn bằng tiếng Việt. Sử dụng HTML để format (h2, h3, p, ul, li, strong). ' +
+                            'Khi viết về sự kiện tương lai hoặc chưa xảy ra, hãy rõ ràng về việc đây là dự đoán/phân tích dựa trên thông tin hiện có. ' +
+                            'Luôn sử dụng thông tin mới nhất và chính xác nhất có thể.'
                 },
                 {
                     role: 'user',
@@ -146,7 +148,9 @@ async function generateWithAnthropic(req, res, { topic, religion, customTopic, s
                 content: prompt
             }
         ],
-        system: 'Bạn là một chuyên gia viết bài về tôn giáo. Viết bài viết chuyên sâu, chính xác và hấp dẫn bằng tiếng Việt.'
+        system: 'Bạn là một chuyên gia viết bài. Viết bài viết chuyên sâu, chính xác và hấp dẫn bằng tiếng Việt. ' +
+                'Khi viết về sự kiện tương lai hoặc chưa xảy ra, hãy rõ ràng về việc đây là dự đoán/phân tích dựa trên thông tin hiện có. ' +
+                'Luôn sử dụng thông tin mới nhất và chính xác nhất có thể.'
     });
 
     const article = message.content[0].text;
@@ -162,9 +166,38 @@ async function generateWithAnthropic(req, res, { topic, religion, customTopic, s
 async function generateWithEnhancedRules(req, res, { topic, religion, customTopic, style, context }) {
     // This will use the existing logic but enhanced
     // For now, return a message to set up API keys
+    const setupGuide = `
+        <div style="padding: 20px; background: #f8f9fa; border-radius: 8px; border-left: 4px solid #007bff;">
+            <h3 style="margin-top: 0; color: #007bff;">🔑 Cấu hình API Key để sử dụng AI</h3>
+            <p>Hiện tại bạn đang sử dụng <strong>chế độ cơ bản</strong> (rule-based). Để sử dụng AI thực sự, vui lòng:</p>
+            <ol style="line-height: 1.8;">
+                <li><strong>Chọn AI Provider:</strong>
+                    <ul>
+                        <li>OpenAI (Khuyến nghị): <a href="https://platform.openai.com/api-keys" target="_blank">Lấy API key</a></li>
+                        <li>Anthropic Claude: <a href="https://console.anthropic.com/" target="_blank">Lấy API key</a></li>
+                        <li>Hugging Face (Miễn phí): <a href="https://huggingface.co/settings/tokens" target="_blank">Lấy API key</a></li>
+                    </ul>
+                </li>
+                <li><strong>Thêm vào Vercel:</strong>
+                    <ul>
+                        <li>Vào Vercel Dashboard → Project Settings → Environment Variables</li>
+                        <li>Thêm biến: <code>OPENAI_API_KEY</code> (hoặc <code>ANTHROPIC_API_KEY</code>, <code>HUGGINGFACE_API_KEY</code>)</li>
+                        <li>Paste API key của bạn</li>
+                        <li>Chọn tất cả environments (Production, Preview, Development)</li>
+                        <li>Click Save và Redeploy</li>
+                    </ul>
+                </li>
+                <li><strong>Xem hướng dẫn chi tiết:</strong> Xem file <code>SETUP-AI.md</code> trong project</li>
+            </ol>
+            <p style="margin-bottom: 0; color: #6c757d; font-size: 0.9em;">
+                💡 <strong>Lưu ý:</strong> Sau khi thêm API key, bạn cần redeploy project trên Vercel để áp dụng thay đổi.
+            </p>
+        </div>
+    `;
+    
     return res.status(200).json({
         success: true,
-        article: 'Vui lòng cấu hình API key để sử dụng AI. Hiện đang sử dụng chế độ cơ bản.',
+        article: setupGuide,
         model: 'rule-based',
         note: 'Để sử dụng AI thực sự, vui lòng thêm API key vào biến môi trường Vercel.'
     });
@@ -193,8 +226,30 @@ function buildPrompt(topic, religion, customTopic, style, context) {
         prompt += `Viết một bài viết so sánh các tôn giáo lớn trên thế giới. `;
         prompt += `Bao gồm bảng so sánh, điểm tương đồng và khác biệt.\n\n`;
     } else if (topic === 'custom' && customTopic) {
+        // Detect if topic is about future events or current events
+        const currentYear = new Date().getFullYear();
+        const futureYearMatch = customTopic.match(/(\d{4})/);
+        const isFutureEvent = futureYearMatch && parseInt(futureYearMatch[1]) > currentYear;
+        const isCurrentEvent = futureYearMatch && parseInt(futureYearMatch[1]) === currentYear;
+        
         prompt += `Viết một bài viết về chủ đề: "${customTopic}". `;
-        prompt += `Phân tích sâu sắc và toàn diện về chủ đề này.\n\n`;
+        
+        if (isFutureEvent) {
+            prompt += `\n\n⚠️ LƯU Ý QUAN TRỌNG: Chủ đề này liên quan đến năm ${futureYearMatch[1]}, là năm tương lai (hiện tại là ${currentYear}). `;
+            prompt += `Nếu sự kiện chưa xảy ra, hãy:\n`;
+            prompt += `- Phân tích các khả năng, dự đoán dựa trên thông tin hiện có\n`;
+            prompt += `- Thảo luận về các ứng viên, kế hoạch, hoặc dự án đã được công bố\n`;
+            prompt += `- Giải thích rõ ràng rằng đây là thông tin dự đoán/phân tích, không phải sự kiện đã xảy ra\n`;
+            prompt += `- Sử dụng thông tin mới nhất có thể (tính đến thời điểm hiện tại)\n`;
+            prompt += `- Nếu không có thông tin chính xác, hãy nói rõ "Thông tin này sẽ được cập nhật khi sự kiện diễn ra"\n\n`;
+        } else if (isCurrentEvent) {
+            prompt += `\n\n⚠️ LƯU Ý: Chủ đề này liên quan đến năm ${currentYear} (năm hiện tại). `;
+            prompt += `Hãy sử dụng thông tin mới nhất và cập nhật nhất có thể. `;
+            prompt += `Nếu sự kiện chưa xảy ra hoặc đang diễn ra, hãy cung cấp thông tin về tiến trình hiện tại.\n\n`;
+        }
+        
+        prompt += `Phân tích sâu sắc và toàn diện về chủ đề này. `;
+        prompt += `Sử dụng thông tin chính xác, cập nhật nhất có thể.\n\n`;
     } else {
         prompt += `Viết một bài viết về chủ đề tôn giáo: ${topic}.\n\n`;
     }
