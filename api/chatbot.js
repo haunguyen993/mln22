@@ -74,9 +74,12 @@ async function chatWithOpenAI(req, res, { message, chatHistory, context }) {
 - Luôn sử dụng thông tin mới nhất và cập nhật nhất có thể
 - Khi trả lời về sự kiện hiện tại hoặc tương lai, hãy sử dụng thông tin mới nhất tính đến thời điểm hiện tại
 - Nếu có thông tin mới hơn, hãy ưu tiên thông tin đó
-- Đối với sự kiện chưa xảy ra (tương lai), hãy phân tích dựa trên thông tin hiện có và làm rõ đây là dự đoán/phân tích
+- Đối với câu hỏi về năm cụ thể:
+  * Nếu năm trong câu hỏi <= năm hiện tại: Hãy trả lời dựa trên thông tin thực tế đã xảy ra hoặc đang diễn ra
+  * Nếu năm trong câu hỏi > năm hiện tại: Hãy phân tích dựa trên thông tin hiện có, các ứng viên/kế hoạch đã công bố, và làm rõ đây là dự đoán/phân tích dựa trên thông tin hiện tại
 - Luôn cập nhật kiến thức về các sự kiện đang diễn ra, tin tức mới nhất, và xu hướng hiện tại
 - Nếu không chắc chắn về thông tin mới nhất, hãy nói rõ và đề xuất người dùng kiểm tra nguồn tin cập nhật
+- KHÔNG từ chối trả lời câu hỏi về tương lai, thay vào đó hãy phân tích và dự đoán dựa trên thông tin hiện có
 
 Bạn trả lời bằng tiếng Việt, rõ ràng, chính xác và hữu ích. Luôn ưu tiên thông tin mới nhất và cập nhật nhất. Nếu không biết câu trả lời, hãy nói thật và đề xuất nguồn thông tin khác.`;
 
@@ -106,13 +109,27 @@ Bạn trả lời bằng tiếng Việt, rõ ràng, chính xác và hữu ích. 
         }
 
         // Add current message with date context for latest information
-        const currentDate = new Date().toLocaleDateString('vi-VN', { 
+        const now = new Date();
+        const currentDate = now.toLocaleDateString('vi-VN', { 
             year: 'numeric', 
             month: 'long', 
             day: 'numeric' 
         });
+        const currentYear = now.getFullYear();
         
-        const messageWithContext = `[Ngày hiện tại: ${currentDate}] ${message}`;
+        // Detect year in message for better context
+        const yearMatch = message.match(/(\d{4})/);
+        let yearContext = '';
+        if (yearMatch) {
+            const questionYear = parseInt(yearMatch[1]);
+            if (questionYear <= currentYear) {
+                yearContext = ` (Năm ${questionYear} là năm hiện tại hoặc đã qua, hãy trả lời dựa trên thông tin thực tế)`;
+            } else {
+                yearContext = ` (Năm ${questionYear} là tương lai, hãy phân tích dựa trên thông tin hiện có và các dự đoán)`;
+            }
+        }
+        
+        const messageWithContext = `[Ngày hiện tại: ${currentDate}, Năm hiện tại: ${currentYear}${yearContext}] ${message}`;
         
         messages.push({
             role: 'user',
@@ -158,9 +175,12 @@ async function chatWithAnthropic(req, res, { message, chatHistory, context }) {
 - Luôn sử dụng thông tin mới nhất và cập nhật nhất có thể
 - Khi trả lời về sự kiện hiện tại hoặc tương lai, hãy sử dụng thông tin mới nhất tính đến thời điểm hiện tại
 - Nếu có thông tin mới hơn, hãy ưu tiên thông tin đó
-- Đối với sự kiện chưa xảy ra (tương lai), hãy phân tích dựa trên thông tin hiện có và làm rõ đây là dự đoán/phân tích
+- Đối với câu hỏi về năm cụ thể:
+  * Nếu năm trong câu hỏi <= năm hiện tại: Hãy trả lời dựa trên thông tin thực tế đã xảy ra hoặc đang diễn ra
+  * Nếu năm trong câu hỏi > năm hiện tại: Hãy phân tích dựa trên thông tin hiện có, các ứng viên/kế hoạch đã công bố, và làm rõ đây là dự đoán/phân tích dựa trên thông tin hiện tại
 - Luôn cập nhật kiến thức về các sự kiện đang diễn ra, tin tức mới nhất, và xu hướng hiện tại
 - Nếu không chắc chắn về thông tin mới nhất, hãy nói rõ và đề xuất người dùng kiểm tra nguồn tin cập nhật
+- KHÔNG từ chối trả lời câu hỏi về tương lai, thay vào đó hãy phân tích và dự đoán dựa trên thông tin hiện có
 
 Bạn trả lời bằng tiếng Việt, rõ ràng, chính xác và hữu ích. Luôn ưu tiên thông tin mới nhất và cập nhật nhất. Nếu không biết câu trả lời, hãy nói thật và đề xuất nguồn thông tin khác.`;
 
@@ -181,13 +201,27 @@ Bạn trả lời bằng tiếng Việt, rõ ràng, chính xác và hữu ích. 
         }
 
         // Add current message with date context for latest information
-        const currentDate = new Date().toLocaleDateString('vi-VN', { 
+        const now = new Date();
+        const currentDate = now.toLocaleDateString('vi-VN', { 
             year: 'numeric', 
             month: 'long', 
             day: 'numeric' 
         });
+        const currentYear = now.getFullYear();
         
-        const messageWithContext = `[Ngày hiện tại: ${currentDate}] ${message}`;
+        // Detect year in message for better context
+        const yearMatch = message.match(/(\d{4})/);
+        let yearContext = '';
+        if (yearMatch) {
+            const questionYear = parseInt(yearMatch[1]);
+            if (questionYear <= currentYear) {
+                yearContext = ` (Năm ${questionYear} là năm hiện tại hoặc đã qua, hãy trả lời dựa trên thông tin thực tế)`;
+            } else {
+                yearContext = ` (Năm ${questionYear} là tương lai, hãy phân tích dựa trên thông tin hiện có và các dự đoán)`;
+            }
+        }
+        
+        const messageWithContext = `[Ngày hiện tại: ${currentDate}, Năm hiện tại: ${currentYear}${yearContext}] ${message}`;
         
         messages.push({
             role: 'user',
